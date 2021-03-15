@@ -3,11 +3,15 @@ from mastodon import Mastodon, StreamListener
 
 def ignore_bot(method):
     def wrapper(obj, status):
-        is_bot = status.get("account", {}).get("bot")
-        if is_bot is None:
-            raise ValueError
-        if not is_bot:
-            method(obj, status)
+        if not status.get("account", {}).get("bot", True):
+            return method(obj, status)
+    return wrapper
+
+
+def ignore_empty_tag(method):
+    def wrapper(obj, status):
+        if status.get("tags"):
+            return method(obj, status)
     return wrapper
 
 
@@ -19,6 +23,7 @@ class Listener(StreamListener):
         self.search_field = "tag_notifier"
 
     @ignore_bot
+    @ignore_empty_tag
     def on_update(self, status):
         tags = {tag.get("name") for tag in status.get("tags")}
 
@@ -34,15 +39,14 @@ class Listener(StreamListener):
 
     def filter_followers(self, tags):
         for acct in self.client.account_followers(self.bot_id):
-            yield (
-                acct.get("acct"),
-                tags.intersection(self.get_assigned_tags(acct)),
-            )
+            if matched_tags := tags.intersection(self.get_assigned_tags(acct)):
+                yield acct.get("acct"), matched_tags
 
     def get_assigned_tags(self, acct):
         for field in acct.get("fields"):
             if field.get("name") == self.search_field:
                 return set(field.get("value").split())
+        return set()
 
     @staticmethod
     def join_hashtag(tags):
