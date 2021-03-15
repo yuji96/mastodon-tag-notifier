@@ -1,14 +1,23 @@
 from __future__ import annotations
-from bs4 import BeautifulSoup
-from jinja2 import Template, Environment, FileSystemLoader
-from mastodon import Mastodon, StreamListener
+import logging
 from typing import Tuple
+
+from bs4 import BeautifulSoup
+from jinja2 import Environment, FileSystemLoader
+from mastodon import Mastodon, StreamListener
+
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 def ignore_bot(method):
     def wrapper(obj, status: dict) -> None:
         if not status.get("account", {}).get("bot", True):
             return method(obj, status)
+        logger.debug("Ignore bot toot")
     return wrapper
 
 
@@ -16,6 +25,7 @@ def ignore_empty_tag(method):
     def wrapper(obj, status: dict) -> None:
         if status.get("tags"):
             return method(obj, status)
+        logger.debug("Ignore toot without tag")
     return wrapper
 
 
@@ -38,7 +48,9 @@ class Listener(StreamListener):
     def on_update(self, status: dict) -> None:
         sender_id = status.get("account", {}).get("id")
         tags = {tag.get("name") for tag in status.get("tags")}
+        logger.debug(f"{status.get('account', {}).get('acct')} toot with {tags}")
         for acct, matched_tags in self.filter_followers(tags, sender_id):
+            logger.debug(f"{acct} will be notified about {matched_tags}")
             content = self.render_content(status, acct, matched_tags)
             if self.debug:
                 yield content
@@ -48,7 +60,7 @@ class Listener(StreamListener):
     def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
         for acct in self.client.account_followers(self.bot_id):
             if self.ignore_sender and acct.get("id") == sender_id:
-                print("ignore")
+                logger.debug("Ignore sender's own toot")
                 continue
             if matched_tags := tags.intersection(self.get_assigned_tags(acct)):
                 yield acct.get("acct"), matched_tags
@@ -79,4 +91,5 @@ if __name__ == "__main__":
         api_base_url=os.environ["url"],
     )
     listener = Listener(mastodon, os.environ["bot_id"])
+    logger.debug("Start")
     mastodon.stream_public(listener)
