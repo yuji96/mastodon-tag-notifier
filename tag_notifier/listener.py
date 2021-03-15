@@ -1,4 +1,5 @@
 from __future__ import annotations
+from jinja2 import Template, Environment, FileSystemLoader
 from mastodon import Mastodon, StreamListener
 from typing import Tuple
 
@@ -27,6 +28,9 @@ class Listener(StreamListener):
         self.ignore_sender = ignore_sender
         self.debug = debug
 
+        env = Environment(loader=FileSystemLoader("tag_notifier"))
+        self.template = template = env.get_template("status_template.j2")
+
     @ignore_bot
     @ignore_empty_tag
     def on_update(self, status: dict) -> None:
@@ -34,11 +38,7 @@ class Listener(StreamListener):
         tags = {tag.get("name") for tag in status.get("tags")}
 
         for acct, matched_tags in self.filter_followers(tags, sender_id):
-            context = "\n".join([
-                f"@{acct}",
-                f"{self.join_hashtag(matched_tags)}",
-                f"{status.get('url')}",
-            ])
+            context = self.template.render(acct=acct, tags=matched_tags, url=status.get("url"))
             if self.debug:
                 yield context
             else:
@@ -57,10 +57,6 @@ class Listener(StreamListener):
             if field.get("name") == self.search_field:
                 return set(field.get("value").split())
         return set()
-
-    @staticmethod
-    def join_hashtag(tags: set) -> str:
-        return " ".join([f"#{tag}" for tag in tags])
 
 
 if __name__ == "__main__":
