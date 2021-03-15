@@ -3,8 +3,8 @@ from tag_notifier.listener import Listener
 
 status = dict(
     account=dict(id=0, acct="tester", bot=False),
-    context="hoge #test",
-    tags=[dict(name="test1")],
+    content='<p>mastodon bot <br /><a href="https://community.4nonome.com/tags/test" class="mention hashtag" rel="tag">#<span>test</span></a></p>',
+    tags=[dict(name="test1"), dict(name="test2")],
     url="<url>",
 )
 
