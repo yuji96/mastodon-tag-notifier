@@ -21,10 +21,12 @@ class Listener(StreamListener):
         self.client = client
         self.bot_id = bot_id
         self.search_field = "tag_notifier"
+        self.ignore_sender = True
 
     @ignore_bot
     @ignore_empty_tag
     def on_update(self, status):
+        sender_id = status.get("account", {}).get("id")
         tags = {tag.get("name") for tag in status.get("tags")}
 
         for acct, matched_tags in self.filter_followers(tags):
@@ -36,9 +38,13 @@ class Listener(StreamListener):
                 ]),
                 visibility="direct",
             )
+        for acct, matched_tags in self.filter_followers(tags, sender_id):
 
-    def filter_followers(self, tags):
+    def filter_followers(self, tags, sender_id):
         for acct in self.client.account_followers(self.bot_id):
+            if self.ignore_sender and acct.get("id") == sender_id:
+                print("ignore")
+                continue
             if matched_tags := tags.intersection(self.get_assigned_tags(acct)):
                 yield acct.get("acct"), matched_tags
 
@@ -63,4 +69,4 @@ if __name__ == "__main__":
         api_base_url=os.environ["url"],
     )
     listener = Listener(mastodon, os.environ["bot_id"])
-    streamer = mastodon.stream_public(listener)
+    mastodon.stream_public(listener)
