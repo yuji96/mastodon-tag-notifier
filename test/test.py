@@ -21,4 +21,4 @@ if __name__ == "__main__":
         api_base_url=os.environ["url"],
     )
     listener = Listener(mastodon, bot_id=os.environ["bot_id"], debug=True)
-    print(*list(listener.on_update(status)), sep="\n")
+    listener.on_update(status)
