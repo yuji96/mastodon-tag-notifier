@@ -20,23 +20,33 @@ class Listener(StreamListener):
 
     @ignore_bot
     def on_update(self, status):
-        for tag in status.get("tags"):
-            for acct in self.filter_followers(tag.get("name")):
-                mastodon.status_post(
-                    "\n".join([
-                        f"@{acct}",
-                        f"{status.get('url')}",
-                    ]),
-                    visibility="direct",
-                )
+        tags = {tag.get("name") for tag in status.get("tags")}
 
-    def filter_followers(self, tag):
+        for acct, matched_tags in self.filter_followers(tags):
+            mastodon.status_post(
+                "\n".join([
+                    f"@{acct}",
+                    f"{matched_tags}"
+                    f"{status.get('url')}",
+                ]),
+                visibility="direct",
+            )
+
+    def filter_followers(self, tags):
         for acct in self.client.account_followers(self.bot_id):
-            for field in acct.get("fields"):
-                if field.get("name") == self.search_field and \
-                        tag in field.get("value").split():
-                    yield acct.get("acct")
-                    break
+            yield (
+                acct.get("acct"),
+                tags.intersection(self.get_assigned_tags(acct)),
+            )
+
+    def get_assigned_tags(self, acct):
+        for field in acct.get("fields"):
+            if field.get("name") == self.search_field:
+                return set(field.get("value").split())
+
+    @staticmethod
+    def join_hashtag(tags):
+        return " ".join([f"#{tag}" for tag in tags])
 
 
 if __name__ == "__main__":
