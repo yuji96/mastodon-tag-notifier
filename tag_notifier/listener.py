@@ -18,12 +18,14 @@ def ignore_empty_tag(method):
 
 
 class Listener(StreamListener):
-    def __init__(self, client: Mastodon, bot_id: str) -> None:
+    def __init__(self, client: Mastodon, bot_id: str,
+                 ignore_sender: bool = True, debug: bool = False) -> None:
         super().__init__()
         self.client = client
         self.bot_id = bot_id
         self.search_field = "tag_notifier"
-        self.ignore_sender = True
+        self.ignore_sender = ignore_sender
+        self.debug = debug
 
     @ignore_bot
     @ignore_empty_tag
@@ -31,7 +33,7 @@ class Listener(StreamListener):
         sender_id = status.get("account", {}).get("id")
         tags = {tag.get("name") for tag in status.get("tags")}
 
-        for acct, matched_tags in self.filter_followers(tags):
+        for acct, matched_tags in self.filter_followers(tags, sender_id):
             mastodon.status_post(
                 "\n".join([
                     f"@{acct}",
@@ -40,7 +42,6 @@ class Listener(StreamListener):
                 ]),
                 visibility="direct",
             )
-        for acct, matched_tags in self.filter_followers(tags, sender_id):
 
     def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
         for acct in self.client.account_followers(self.bot_id):
