@@ -1,22 +1,24 @@
+from __future__ import annotations
 from mastodon import Mastodon, StreamListener
+from typing import Tuple
 
 
 def ignore_bot(method):
-    def wrapper(obj, status):
+    def wrapper(obj, status: dict) -> None:
         if not status.get("account", {}).get("bot", True):
             return method(obj, status)
     return wrapper
 
 
 def ignore_empty_tag(method):
-    def wrapper(obj, status):
+    def wrapper(obj, status: dict) -> None:
         if status.get("tags"):
             return method(obj, status)
     return wrapper
 
 
 class Listener(StreamListener):
-    def __init__(self, client, bot_id):
+    def __init__(self, client: Mastodon, bot_id: str) -> None:
         super().__init__()
         self.client = client
         self.bot_id = bot_id
@@ -25,7 +27,7 @@ class Listener(StreamListener):
 
     @ignore_bot
     @ignore_empty_tag
-    def on_update(self, status):
+    def on_update(self, status: dict) -> None:
         sender_id = status.get("account", {}).get("id")
         tags = {tag.get("name") for tag in status.get("tags")}
 
@@ -40,7 +42,7 @@ class Listener(StreamListener):
             )
         for acct, matched_tags in self.filter_followers(tags, sender_id):
 
-    def filter_followers(self, tags, sender_id):
+    def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
         for acct in self.client.account_followers(self.bot_id):
             if self.ignore_sender and acct.get("id") == sender_id:
                 print("ignore")
@@ -48,14 +50,14 @@ class Listener(StreamListener):
             if matched_tags := tags.intersection(self.get_assigned_tags(acct)):
                 yield acct.get("acct"), matched_tags
 
-    def get_assigned_tags(self, acct):
+    def get_assigned_tags(self, acct: dict) -> set:
         for field in acct.get("fields"):
             if field.get("name") == self.search_field:
                 return set(field.get("value").split())
         return set()
 
     @staticmethod
-    def join_hashtag(tags):
+    def join_hashtag(tags: set) -> str:
         return " ".join([f"#{tag}" for tag in tags])
 
 
