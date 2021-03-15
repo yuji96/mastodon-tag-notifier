@@ -34,14 +34,15 @@ class Listener(StreamListener):
         tags = {tag.get("name") for tag in status.get("tags")}
 
         for acct, matched_tags in self.filter_followers(tags, sender_id):
-            mastodon.status_post(
-                "\n".join([
-                    f"@{acct}",
-                    f"{matched_tags}"
-                    f"{status.get('url')}",
-                ]),
-                visibility="direct",
-            )
+            context = "\n".join([
+                f"@{acct}",
+                f"{self.join_hashtag(matched_tags)}",
+                f"{status.get('url')}",
+            ])
+            if self.debug:
+                yield context
+            else:
+                mastodon.status_post(context, visibility="direct")
 
     def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
         for acct in self.client.account_followers(self.bot_id):
