@@ -53,7 +53,7 @@ class Listener(StreamListener):
             logger.debug(f"{acct} will be notified about {matched_tags}")
             content = self.render_content(status, acct, matched_tags)
             if self.debug:
-                yield content
+                logger.debug(content)
             else:
                 mastodon.status_post(content, visibility="direct")
 
