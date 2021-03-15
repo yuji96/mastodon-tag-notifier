@@ -1,4 +1,5 @@
 from __future__ import annotations
+from bs4 import BeautifulSoup
 from jinja2 import Template, Environment, FileSystemLoader
 from mastodon import Mastodon, StreamListener
 from typing import Tuple
@@ -29,20 +30,20 @@ class Listener(StreamListener):
         self.debug = debug
 
         env = Environment(loader=FileSystemLoader("tag_notifier"))
-        self.template = template = env.get_template("status_template.j2")
+        self.raw = env.get_template("raw.j2")
+        self.content = env.get_template("content.j2")
 
     @ignore_bot
     @ignore_empty_tag
     def on_update(self, status: dict) -> None:
         sender_id = status.get("account", {}).get("id")
         tags = {tag.get("name") for tag in status.get("tags")}
-
         for acct, matched_tags in self.filter_followers(tags, sender_id):
-            context = self.template.render(acct=acct, tags=matched_tags, url=status.get("url"))
+            content = self.render_content(status, acct, matched_tags)
             if self.debug:
-                yield context
+                yield content
             else:
-                mastodon.status_post(context, visibility="direct")
+                mastodon.status_post(content, visibility="direct")
 
     def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
         for acct in self.client.account_followers(self.bot_id):
@@ -57,6 +58,12 @@ class Listener(StreamListener):
             if field.get("name") == self.search_field:
                 return set(field.get("value").split())
         return set()
+
+    def render_content(self, status: dict, acct: str, tags: set) -> str:
+        content = status.get("content", "").replace("<br />", "\n")
+        body = BeautifulSoup(content, 'html.parser').get_text()
+        raw = self.raw.render(acct=acct, tags=tags, url=status.get("url"), body=body)
+        return self.content.render(raw=raw)
 
 
 if __name__ == "__main__":
