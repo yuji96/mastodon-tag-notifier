@@ -35,7 +35,7 @@ class Listener(StreamListener):
         super().__init__()
         self.client = client
         self.bot_id = bot_id
-        self.search_field = "tag_notifier"
+        self.search_field = "tag-notifier"
         self.ignore_sender = ignore_sender
         self.debug = debug
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     import os
 
-    load_dotenv(verbose=True)
+    load_dotenv()
 
     mastodon = Mastodon(
         client_id=os.environ["client_id"],

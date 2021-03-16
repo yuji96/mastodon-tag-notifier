@@ -1,0 +1,35 @@
+{
+  "name": "mastodon-tag-notifier",
+  "description": "This app does one little thing, and does it well.",
+  "keywords": [
+    "Mastodon",
+    "Bot",
+    "Python"
+  ],
+  "repository": "https://github.com/yuji96/mastodon-tag-notifier",
+  "logo": "",
+  "success_url": "/welcome",
+  "env": {
+    "client_id": {
+      "description": "Mastodon App Client key. You can get it in settings page > Development > Application"
+    },
+    "client_secret": {
+      "description": "Mastodon App Client secret. You can get it in settings page > Development > Application"
+    },
+    "access_token": {
+      "description": "Mastodon App Your access token. You can get it in settings page > Development > Application"
+    },
+    "url": {
+      "description": "The domain of the Mastodon instance to which you want to add the bot."
+    },
+    "bot_id": {
+      "description": "Account ID of the bot. For example, you can get from url, <mastodon domain>/accounts/<bot_id>"
+    }
+  },
+  "formation": {
+    "bot": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}
