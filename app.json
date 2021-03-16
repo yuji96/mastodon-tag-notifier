@@ -1,0 +1,35 @@
+{
+  "name": "mastodon-tag-notifier",
+  "description": "This app does one little thing, and does it well.",
+  "keywords": [
+    "Mastodon",
+    "Bot",
+    "Python"
+  ],
+  "repository": "https://github.com/yuji96/mastodon-tag-notifier",
+  "logo": "",
+  "success_url": "/welcome",
+  "env": {
+    "client_id": {
+      "description": ""
+    },
+    "client_secret": {
+      "description": ""
+    },
+    "access_token": {
+      "description": ""
+    },
+    "url": {
+      "description": ""
+    },
+    "bot_id": {
+      "description": ""
+    }
+  },
+  "formation": {
+    "bot": {
+      "quantity": 1,
+      "size": "free"
+    }
+  }
+}

@@ -35,7 +35,7 @@ class Listener(StreamListener):
         super().__init__()
         self.client = client
         self.bot_id = bot_id
-        self.search_field = "tag_notifier"
+        self.search_field = "tag-notifier"
         self.ignore_sender = ignore_sender
         self.debug = debug
 
