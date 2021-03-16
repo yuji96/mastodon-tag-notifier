@@ -11,19 +11,19 @@
   "success_url": "/welcome",
   "env": {
     "client_id": {
-      "description": ""
+      "description": "Mastodon App Client key. You can get it in settings page > Development > Application"
     },
     "client_secret": {
-      "description": ""
+      "description": "Mastodon App Client secret. You can get it in settings page > Development > Application"
     },
     "access_token": {
-      "description": ""
+      "description": "Mastodon App Your access token. You can get it in settings page > Development > Application"
     },
     "url": {
-      "description": ""
+      "description": "The domain of the Mastodon instance to which you want to add the bot."
     },
     "bot_id": {
-      "description": ""
+      "description": "Account ID of the bot. For example, you can get from url, <mastodon domain>/accounts/<bot_id>"
     }
   },
   "formation": {
