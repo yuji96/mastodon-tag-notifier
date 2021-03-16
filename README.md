@@ -21,12 +21,12 @@ Users only need to follow the bot and write interesting hashtags in their profil
 Screenshotting without personal information is a pain so I'll get to it later...
 
 ### User's setting in Mastodon
-1. follow the bot.
+1. Follow the bot.
 2. Go to `settings page > Profile > Appearance > Profile metadata`, and set "Label" and "Content".
   - "Label": It must be as same as `tag-notifier` (which defined as [`self.search_field`][1]).
   - "Content": It's the hashtags you wanna receive notifications for. You can set multiple hashtags by separating them with spaces.
 
-[1]: https://github.com/yuji96/mastodon-tag-notifier/blob/f41a3bdaffb94566c4e18bf0681e89bf87f77e1d/tag_notifier/listener.py#L38
+[1]: https://github.com/yuji96/mastodon-tag-notifier/blob/master/tag_notifier/listener.py#L38
 
 example metadata:
 
