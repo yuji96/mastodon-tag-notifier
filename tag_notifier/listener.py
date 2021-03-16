@@ -82,7 +82,7 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
     import os
 
-    load_dotenv(verbose=True)
+    load_dotenv()
 
     mastodon = Mastodon(
         client_id=os.environ["client_id"],
