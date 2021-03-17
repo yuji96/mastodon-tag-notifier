@@ -1,11 +1,13 @@
 from mastodon import Mastodon
 from tag_notifier.listener import Listener
 
+with open("tests/test.html") as f:
+    content_html = "".join(f.read().split()).replace("<br/>", "<br />")
+
 status = dict(
     account=dict(id=0, acct="tester", bot=False),
-    content='<p>mastodon bot <br /><a href="https://example.com/tags/test" \
-        class="mention hashtag" rel="tag">#<span>test</span></a></p>',
-    tags=[dict(name="test1"), dict(name="test2")],
+    content=content_html,
+    tags=[dict(name="test")],
     url="<url>",
 )
 
