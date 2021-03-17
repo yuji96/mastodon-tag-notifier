@@ -1,6 +1,6 @@
 from __future__ import annotations
 import logging
-from typing import Tuple
+from typing import Callable, Iterator, Optional, Tuple
 
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
@@ -13,19 +13,21 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-def ignore_bot(method):
+def ignore_bot(method: OnUpdateType) -> OnUpdateType:
     def wrapper(obj, status: dict) -> None:
-        if not status.get("account", {}).get("bot", True):
-            return method(obj, status)
-        logger.debug("Ignore bot toot")
+        if status.get("account", {}).get("bot", True):
+            logger.debug("Ignore bot toot")
+            return None
+        return method(obj, status)
     return wrapper
 
 
-def ignore_empty_tag(method):
+def ignore_empty_tag(method: OnUpdateType) -> OnUpdateType:
     def wrapper(obj, status: dict) -> None:
-        if status.get("tags"):
-            return method(obj, status)
-        logger.debug("Ignore toot without tag")
+        if not status.get("tags"):
+            logger.debug("Ignore toot without tag")
+            return None
+        return method(obj, status)
     return wrapper
 
 
@@ -47,7 +49,7 @@ class Listener(StreamListener):
     @ignore_empty_tag
     def on_update(self, status: dict) -> None:
         sender_id = status.get("account", {}).get("id")
-        tags = {tag.get("name") for tag in status.get("tags")}
+        tags = {tag.get("name") for tag in status.get("tags", {})}
         logger.debug(f"{status.get('account', {}).get('acct')} toot with {tags}")
         for acct, matched_tags in self.filter_followers(tags, sender_id):
             logger.debug(f"{acct} will be notified about {matched_tags}")
@@ -57,7 +59,7 @@ class Listener(StreamListener):
             else:
                 mastodon.status_post(content, visibility="direct")
 
-    def filter_followers(self, tags: set, sender_id: int) -> Tuple[str, set]:
+    def filter_followers(self, tags: set, sender_id: Optional[int]) -> Iterator[Tuple[str, set]]:
         for acct in self.client.account_followers(self.bot_id):
             if self.ignore_sender and acct.get("id") == sender_id:
                 logger.debug("Ignore sender's own toot")
@@ -66,17 +68,20 @@ class Listener(StreamListener):
                 yield acct.get("acct"), matched_tags
 
     def get_assigned_tags(self, acct: dict) -> set:
-        for field in acct.get("fields"):
+        for field in acct.get("fields", {}):
             if field.get("name") == self.search_field:
                 return set(field.get("value").split())
         return set()
 
     def render_content(self, status: dict, acct: str, tags: set) -> str:
-        content = status.get("content", "").replace("<br />", "\n")
-        body = BeautifulSoup(content, 'html.parser').get_text()
-        raw = self.raw.render(acct=acct, tags=tags, url=status.get("url"), body=body)
+        soup = BeautifulSoup(status.get("content", "").replace("<br />", "\n"), "html.parser")
+        body = "\n\n".join([tag.get_text() for tag in soup.select("p")])
+        url = f"{self.client.api_base_url}/web/statuses/{status.get('id', '')}"
+        raw = self.raw.render(acct=acct, tags=tags, url=url, body=body)
         return self.content.render(raw=raw)
 
+
+OnUpdateType = Callable[[Listener, dict], None]
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
