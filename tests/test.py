@@ -9,6 +9,7 @@ status = dict(
     content=content_html,
     tags=[dict(name="test")],
     url="<url>",
+    id=0,
 )
 
 if __name__ == "__main__":

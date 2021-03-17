@@ -76,7 +76,8 @@ class Listener(StreamListener):
     def render_content(self, status: dict, acct: str, tags: set) -> str:
         soup = BeautifulSoup(status.get("content", "").replace("<br />", "\n"), "html.parser")
         body = "\n\n".join([tag.get_text() for tag in soup.select("p")])
-        raw = self.raw.render(acct=acct, tags=tags, url=status.get("url"), body=body)
+        url = f"{self.client.api_base_url}/web/statuses/{status.get('id', '')}"
+        raw = self.raw.render(acct=acct, tags=tags, url=url, body=body)
         return self.content.render(raw=raw)
 
 
