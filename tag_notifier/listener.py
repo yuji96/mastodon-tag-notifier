@@ -53,7 +53,8 @@ class Listener(StreamListener):
         logger.debug(f"{status.get('account', {}).get('acct')} toot with {tags}")
         for acct, matched_tags in self.filter_followers(tags, sender_id):
             logger.debug(f"{acct} will be notified about {matched_tags}")
-            content = self.render_content(status, acct, matched_tags)
+            content = self.render_content(status, tags, to=acct,
+                                          by=status.get("account", {}).get("acct"))
             if self.debug:
                 logger.debug(content)
             else:
@@ -73,11 +74,11 @@ class Listener(StreamListener):
                 return set(field.get("value").split())
         return set()
 
-    def render_content(self, status: dict, acct: str, tags: set) -> str:
+    def render_content(self, status: dict, tags: set, to: str, by: str) -> str:
         soup = BeautifulSoup(status.get("content", "").replace("<br />", "\n"), "html.parser")
         body = "\n\n".join([tag.get_text() for tag in soup.select("p")])
         url = f"{self.client.api_base_url}/web/statuses/{status.get('id', '')}"
-        raw = self.raw.render(acct=acct, tags=tags, url=url, body=body)
+        raw = self.raw.render(tags=tags, to=to, by=by, url=url, body=body)
         return self.content.render(raw=raw)
 
 
