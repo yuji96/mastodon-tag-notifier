@@ -54,9 +54,5 @@ Python3.8.0 or more
 $ git clone https://github.com/yuji96/mastodon-tag-notifier.git
 $ cd mastodon-tag-notifier
 $ pip install -e .
-$ python tag_notofier/listerner.py
+$ python tag_notifier/listener.py
 ```
-
-
-
-
